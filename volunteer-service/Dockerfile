@@ -10,6 +10,7 @@ COPY monetary-donation-service ./monetary-donation-service
 COPY notification-service ./notification-service
 COPY education-service ./education-service
 COPY volunteer-service ./volunteer-service
+COPY chatbot-service ./chatbot-service
 RUN mvn -q -pl volunteer-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine

@@ -8,6 +8,9 @@ COPY auth-service ./auth-service
 COPY food-donation-service ./food-donation-service
 COPY monetary-donation-service ./monetary-donation-service
 COPY notification-service ./notification-service
+COPY education-service ./education-service
+COPY volunteer-service ./volunteer-service
+COPY chatbot-service ./chatbot-service
 RUN mvn -q -pl notification-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
