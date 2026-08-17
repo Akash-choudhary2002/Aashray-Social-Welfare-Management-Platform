@@ -1,8 +1,17 @@
 import axios from 'axios';
 
-// Every request goes through the API Gateway (Phase 1), which routes to
-// the right microservice and validates the JWT before forwarding.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && !envUrl.includes('184.73.25.128')) {
+    return envUrl;
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    return `http://${window.location.hostname}:8080`;
+  }
+  return 'http://localhost:8080';
+};
+
+const BASE_URL = getBaseUrl();
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,

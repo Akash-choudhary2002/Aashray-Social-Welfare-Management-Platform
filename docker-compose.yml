@@ -237,8 +237,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: http://184.73.25.128:8080
     container_name: aashray-frontend
     restart: unless-stopped
     ports:
