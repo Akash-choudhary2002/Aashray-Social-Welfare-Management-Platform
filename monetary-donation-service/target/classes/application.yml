@@ -1,0 +1,66 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: MONETARY-DONATION-SERVICE
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:aashray_monetary_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    connection-timeout: 2000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${server.port}
+
+jwt:
+  secret: ${JWT_SECRET:aashray-super-secret-key-change-me-in-production-min-256-bits}
+
+# Get these from https://dashboard.razorpay.com/app/keys (Test mode keys
+# start with rzp_test_). Never commit real keys — always set them via the
+# RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET environment variables.
+razorpay:
+  key:
+    id: ${RAZORPAY_KEY_ID:rzp_test_TLbCV4ewuUoqYf}
+    secret: ${RAZORPAY_KEY_SECRET:xIhRO6dF5UWRrT0Yu7Vu4jBV}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [${spring.application.name}] %-5level %logger{36} - %msg%n"
+  level:
+    com.aashray.monetary: INFO

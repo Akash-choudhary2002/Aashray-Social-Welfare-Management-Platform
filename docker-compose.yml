@@ -1,0 +1,240 @@
+version: "3.9"
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: aashray-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: aashray_auth_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: aashray-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    container_name: aashray-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: aashray-gateway
+    restart: unless-stopped
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+    ports:
+      - "8080:8080"
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: aashray-auth-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_auth_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+    ports:
+      - "8081:8081"
+
+  food-donation-service:
+    build:
+      context: .
+      dockerfile: food-donation-service/Dockerfile
+    container_name: aashray-food-donation-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_food_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+    ports:
+      - "8082:8082"
+
+  monetary-donation-service:
+    build:
+      context: .
+      dockerfile: monetary-donation-service/Dockerfile
+    container_name: aashray-monetary-donation-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_monetary_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+      # Get test-mode keys from https://dashboard.razorpay.com/app/keys
+      # Replace these before running a real checkout — the defaults baked
+      # into application.yml are placeholders and will fail every payment.
+      RAZORPAY_KEY_ID: rzp_test_your_key_id_here
+      RAZORPAY_KEY_SECRET: your_key_secret_here
+    ports:
+      - "8083:8083"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: aashray-notification-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_notification_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+      # Real email is opt-in — omit these to keep emails simulated/logged only.
+      EMAIL_ENABLED: "false"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_FROM: no-reply@aashray.org
+    ports:
+      - "8084:8084"
+
+  education-service:
+    build:
+      context: .
+      dockerfile: education-service/Dockerfile
+    container_name: aashray-education-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_education_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+    ports:
+      - "8085:8085"
+
+  volunteer-service:
+    build:
+      context: .
+      dockerfile: volunteer-service/Dockerfile
+    container_name: aashray-volunteer-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aashray_volunteer_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+    ports:
+      - "8086:8086"
+
+  chatbot-service:
+    build:
+      context: .
+      dockerfile: chatbot-service/Dockerfile
+    container_name: aashray-chatbot-service
+    restart: unless-stopped
+    depends_on:
+      eureka-server:
+        condition: service_started
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      JWT_SECRET: aashray-super-secret-key-change-me-in-production-min-256-bits
+      # Leave GEMINI_API_KEY empty to run in FAQ-fallback mode (no external calls).
+      GEMINI_API_KEY: ""
+      GEMINI_MODEL: gemini-1.5-flash
+    ports:
+      - "8087:8087"
+
+  # ---- Added in later phases ----
+  # frontend (React + nginx):
+
+volumes:
+  mysql-data:

@@ -1,0 +1,71 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
+
+        - id: food-donation-service
+          uri: lb://FOOD-DONATION-SERVICE
+          predicates:
+            - Path=/api/food-donations/**
+
+        - id: monetary-donation-service
+          uri: lb://MONETARY-DONATION-SERVICE
+          predicates:
+            - Path=/api/monetary-donations/**
+
+        - id: education-service
+          uri: lb://EDUCATION-SERVICE
+          predicates:
+            - Path=/api/education/**
+
+        - id: volunteer-service
+          uri: lb://VOLUNTEER-SERVICE
+          predicates:
+            - Path=/api/volunteers/**
+
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/**
+
+        - id: chatbot-service
+          uri: lb://CHATBOT-SERVICE
+          predicates:
+            - Path=/api/chatbot/**
+
+jwt:
+  secret: ${JWT_SECRET:aashray-super-secret-key-change-me-in-production-min-256-bits}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [${spring.application.name}] %-5level %logger{36} - %msg%n"
+  level:
+    com.aashray.gateway: INFO
+    org.springframework.cloud.gateway: INFO
